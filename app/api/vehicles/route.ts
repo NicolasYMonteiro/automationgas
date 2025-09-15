@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // Calcular total de despesas
     const vehiclesWithExpenses = vehicles.map(vehicle => ({
       ...vehicle,
-      totalExpenses: vehicle.expenses.reduce((sum, expense) => sum + expense.amount, 0)
+      totalExpenses: vehicle.expenses.reduce((sum, expense) => sum + expense.amount.toNumber(), 0)
     }))
 
     return NextResponse.json(vehiclesWithExpenses)
