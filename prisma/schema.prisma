@@ -44,6 +44,7 @@ model User {
   emailVerified DateTime?
   image         String?
   role          UserRole  @default(ATENDENTE)
+  phone         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
