@@ -69,10 +69,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const body = await request.json()
-    const { productId, customerName, quantity, paymentType, notes, isCredit } = body
+  const body = await request.json()
+  const { productId, customerName, quantity, paymentType, notes, isCredit, price } = body
 
-    // Buscar produto para obter o preço
+    // Buscar produto para obter o preço e validar estoque
     const product = await prisma.product.findUnique({
       where: { id: productId }
     })
@@ -86,7 +86,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient stock' }, { status: 400 })
     }
 
-    const totalPrice = Number(product.price) * quantity
+    // Usar o preço enviado pelo frontend, se fornecido, senão usar o preço do produto
+    const unitPrice = typeof price === 'number' && !isNaN(price) && price > 0 ? price : Number(product.price)
+    const totalPrice = unitPrice * quantity
 
     // Processar cliente - criar ou buscar cliente baseado no nome
     let customerId = null

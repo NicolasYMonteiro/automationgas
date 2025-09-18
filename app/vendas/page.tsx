@@ -38,6 +38,7 @@ export default function Vendas() {
     customer: '',
     product: '',
     quantity: 1,
+    price: '', // novo campo para valor editável
     paymentType: 'DINHEIRO',
     notes: '',
     isCredit: false
@@ -157,6 +158,7 @@ export default function Vendas() {
           productId: newSale.product,
           customerName: newSale.customer || 'Consumidor Final',
           quantity: newSale.quantity,
+          price: Number(newSale.price),
           paymentType: newSale.isCredit ? 'FIADO' : newSale.paymentType,
           notes: newSale.notes,
           isCredit: newSale.isCredit,
@@ -170,6 +172,7 @@ export default function Vendas() {
           customer: '',
           product: '',
           quantity: 1,
+          price: '',
           paymentType: 'DINHEIRO',
           notes: '',
           isCredit: false
@@ -242,7 +245,17 @@ export default function Vendas() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="product">Produto</Label>
-                  <Select value={newSale.product} onValueChange={(value) => setNewSale({...newSale, product: value})}>
+                  <Select 
+                    value={newSale.product} 
+                    onValueChange={(value) => {
+                      const selectedProduct = products.find((p) => p.id === value);
+                      setNewSale({
+                        ...newSale,
+                        product: value,
+                        price: selectedProduct ? String(selectedProduct.price) : ''
+                      });
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o produto" />
                     </SelectTrigger>
@@ -256,6 +269,18 @@ export default function Vendas() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="price">Valor (R$)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={newSale.price}
+                    onChange={(e) => setNewSale({ ...newSale, price: e.target.value })}
+                    placeholder="Digite o valor da venda"
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="quantity">Quantidade</Label>
                   <Input
                     id="quantity"
@@ -266,38 +291,6 @@ export default function Vendas() {
                       const value = parseInt(e.target.value) || 1
                       setNewSale({...newSale, quantity: value})
                     }}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="paymentType">Forma de Pagamento</Label>
-                  <Select 
-                    value={newSale.isCredit ? 'FIADO' : newSale.paymentType} 
-                    onValueChange={(value) => {
-                      if (value === 'FIADO') {
-                        setNewSale({...newSale, paymentType: 'FIADO', isCredit: true, customer: ''})
-                      } else {
-                        setNewSale({...newSale, paymentType: value, isCredit: false})
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DINHEIRO">Dinheiro</SelectItem>
-                      <SelectItem value="CARTAO">Cartão</SelectItem>
-                      <SelectItem value="PIX">PIX</SelectItem>
-                      <SelectItem value="FIADO">Fiado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="notes">Observações</Label>
-                  <Input
-                    id="notes"
-                    value={newSale.notes}
-                    onChange={(e) => setNewSale({...newSale, notes: e.target.value})}
-                    placeholder="Observações adicionais"
                   />
                 </div>
               </div>

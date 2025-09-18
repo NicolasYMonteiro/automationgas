@@ -1,7 +1,12 @@
 {
-  "/page": "app/page.js",
   "/funcionarios/page": "app/funcionarios/page.js",
-  "/fiados/page": "app/fiados/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/employees/route": "app/api/employees/route.js",
+  "/api/vehicles/route": "app/api/vehicles/route.js",
+  "/api/sales/route": "app/api/sales/route.js",
+  "/api/products/route": "app/api/products/route.js",
+  "/vendas/page": "app/vendas/page.js",
   "/relatorios/page": "app/relatorios/page.js",
-  "/vendas/page": "app/vendas/page.js"
+  "/api/customers/route": "app/api/customers/route.js",
+  "/api/reports/employees/route": "app/api/reports/employees/route.js"
 }
