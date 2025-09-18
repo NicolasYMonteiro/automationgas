@@ -20,6 +20,7 @@ interface Sale {
   totalPrice: number
   paymentType: string
   status: string
+  fiadoCode?: string
   date: string
   user: string
 }
@@ -65,6 +66,7 @@ export default function Vendas() {
           totalPrice: Number(sale.totalPrice),
           paymentType: sale.paymentType,
           status: sale.status,
+          fiadoCode: sale.fiadoCode,
           date: new Date(sale.createdAt).toLocaleString('pt-BR'),
           user: sale.user?.name || ''
         })))
@@ -373,7 +375,7 @@ export default function Vendas() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Buscar por cliente ou produto..."
+                    placeholder="Buscar por cliente, produto, código fiado ou vendedor..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -421,9 +423,10 @@ export default function Vendas() {
                     <TableHead>Quantidade</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Pagamento</TableHead>
+                    <TableHead>Código Fiado</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
                     <TableHead>Vendedor</TableHead>
+                    <TableHead>Data</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -434,9 +437,18 @@ export default function Vendas() {
                       <TableCell>{sale.quantity}</TableCell>
                       <TableCell>{formatCurrency(sale.totalPrice)}</TableCell>
                       <TableCell>{getPaymentTypeBadge(sale.paymentType)}</TableCell>
+                      <TableCell>
+                        {sale.fiadoCode ? (
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {sale.fiadoCode}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                      <TableCell className="font-medium text-blue-600">{sale.user}</TableCell>
                       <TableCell>{sale.date}</TableCell>
-                      <TableCell>{sale.user}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

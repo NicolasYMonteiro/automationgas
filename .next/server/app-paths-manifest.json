@@ -1,14 +1,7 @@
 {
-  "/not-found": "app/not-found.js",
-  "/despesas/page": "app/despesas/page.js",
-  "/lucros/page": "app/lucros/page.js",
-  "/relatorios/page": "app/relatorios/page.js",
-  "/estoque/page": "app/estoque/page.js",
   "/page": "app/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/inventory/route": "app/api/inventory/route.js",
-  "/api/products/route": "app/api/products/route.js",
-  "/api/expenses/route": "app/api/expenses/route.js",
-  "/api/sales/route": "app/api/sales/route.js",
-  "/api/customers/route": "app/api/customers/route.js"
+  "/funcionarios/page": "app/funcionarios/page.js",
+  "/fiados/page": "app/fiados/page.js",
+  "/relatorios/page": "app/relatorios/page.js",
+  "/vendas/page": "app/vendas/page.js"
 }

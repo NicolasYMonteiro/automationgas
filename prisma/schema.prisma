@@ -93,6 +93,7 @@ model Sale {
   saleDate    DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  fiadoCode   String?  @unique // Código único de 6 dígitos para vendas fiadas
 
   userId    String
   user      User @relation(fields: [userId], references: [id])

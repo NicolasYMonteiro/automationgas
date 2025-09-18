@@ -23,10 +23,14 @@ export async function GET(request: NextRequest) {
     // Construir filtros de data
     const dateFilter: any = {}
     if (startDate) {
-      dateFilter.gte = new Date(startDate)
+      const start = new Date(startDate)
+      start.setHours(0, 0, 0, 0) // Início do dia
+      dateFilter.gte = start
     }
     if (endDate) {
-      dateFilter.lte = new Date(endDate)
+      const end = new Date(endDate)
+      end.setHours(23, 59, 59, 999) // Final do dia
+      dateFilter.lte = end
     }
 
     // Buscar funcionários
@@ -35,7 +39,7 @@ export async function GET(request: NextRequest) {
       include: {
         sales: {
           where: {
-            createdAt: Object.keys(dateFilter).length > 0 ? dateFilter : undefined
+            ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
           },
           include: {
             product: { select: { name: true } },
@@ -44,7 +48,7 @@ export async function GET(request: NextRequest) {
         },
         expenses: {
           where: {
-            createdAt: Object.keys(dateFilter).length > 0 ? dateFilter : undefined
+            ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
           },
           include: {
             vehicle: { select: { name: true, plate: true } }

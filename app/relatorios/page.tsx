@@ -62,6 +62,7 @@ export default function Relatorios() {
   const { canManageEmployees, loading } = usePermissions()
   const router = useRouter()
   const [reportData, setReportData] = useState<ReportData | null>(null)
+  const [employees, setEmployees] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeReport | null>(null)
@@ -76,8 +77,22 @@ export default function Relatorios() {
   useEffect(() => {
     if (!loading && !canManageEmployees) {
       router.push('/')
+    } else if (canManageEmployees) {
+      fetchEmployees()
     }
   }, [canManageEmployees, loading, router])
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('/api/employees')
+      if (response.ok) {
+        const data = await response.json()
+        setEmployees(data)
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error)
+    }
+  }
 
   if (loading) {
     return (
@@ -104,7 +119,6 @@ export default function Relatorios() {
       const response = await fetch(`/api/reports/employees?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
-        console.log('Report data received:', data)
         setReportData(data)
       } else {
         console.error('Error fetching report:', response.status, response.statusText)
@@ -170,6 +184,17 @@ export default function Relatorios() {
   }
 
   const handleApplyFilters = () => {
+    // Validar datas
+    if (filters.startDate && filters.endDate) {
+      const startDate = new Date(filters.startDate)
+      const endDate = new Date(filters.endDate)
+      
+      if (startDate > endDate) {
+        alert('A data inicial não pode ser maior que a data final')
+        return
+      }
+    }
+
     fetchReport()
     setIsFilterDialogOpen(false)
   }
@@ -230,16 +255,16 @@ export default function Relatorios() {
                     <Select value={filters.employeeId} onValueChange={(value) => setFilters({...filters, employeeId: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Todos os funcionários" />
-                      </SelectTrigger>
+              </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="todos">Todos os funcionários</SelectItem>
-                        {reportData?.employees.map((employee) => (
+                        {employees.map((employee) => (
                           <SelectItem key={employee.id} value={employee.id}>
                             {employee.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
+            </Select>
                   </div>
                 </div>
                 <div className="flex justify-end space-x-2">
@@ -248,7 +273,7 @@ export default function Relatorios() {
                   </Button>
                   <Button onClick={handleApplyFilters}>
                     Aplicar Filtros
-                  </Button>
+            </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -272,69 +297,98 @@ export default function Relatorios() {
 
         {reportData && (
           <>
-            {/* Cards de resumo */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{formatCurrency(reportData.summary.totalSales)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {reportData.summary.totalEmployees} funcionários
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Gastos</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">{formatCurrency(reportData.summary.totalExpenses)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Gastos operacionais
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Resultado Líquido</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${reportData.summary.totalNetResult >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(reportData.summary.totalNetResult)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Vendas - Gastos
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Funcionários</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{reportData.summary.totalEmployees}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Total de funcionários
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Tabela de funcionários */}
+            {/* Informações do período */}
             <Card>
               <CardHeader>
-                <CardTitle>Relatório por Funcionário</CardTitle>
-                <CardDescription>
-                  Vendas e gastos detalhados por funcionário
-                </CardDescription>
+                <CardTitle>Período do Relatório</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="flex items-center space-x-4 text-sm">
+                  <div>
+                    <span className="font-medium">Data inicial:</span>{' '}
+                    {reportData.period.startDate ? 
+                      new Date(reportData.period.startDate).toLocaleDateString('pt-BR') : 
+                      'Não definida'
+                    }
+                  </div>
+                  <div>
+                    <span className="font-medium">Data final:</span>{' '}
+                    {reportData.period.endDate ? 
+                      new Date(reportData.period.endDate).toLocaleDateString('pt-BR') : 
+                      'Não definida'
+                    }
+                  </div>
+                  <div>
+                    <span className="font-medium">Funcionários:</span>{' '}
+                    {reportData.summary.totalEmployees}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cards de resumo */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(reportData.summary.totalSales)}</div>
+              <p className="text-xs text-muted-foreground">
+                    {reportData.summary.totalEmployees} funcionários
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total de Gastos</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                  <div className="text-2xl font-bold text-red-600">{formatCurrency(reportData.summary.totalExpenses)}</div>
+              <p className="text-xs text-muted-foreground">
+                    Gastos operacionais
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Resultado Líquido</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                  <div className={`text-2xl font-bold ${reportData.summary.totalNetResult >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(reportData.summary.totalNetResult)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                    Vendas - Gastos
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Funcionários</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                  <div className="text-2xl font-bold">{reportData.summary.totalEmployees}</div>
+              <p className="text-xs text-muted-foreground">
+                    Total de funcionários
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+            {/* Tabela de funcionários */}
+          <Card>
+            <CardHeader>
+                <CardTitle>Relatório por Funcionário</CardTitle>
+              <CardDescription>
+                  Vendas e gastos detalhados por funcionário
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -365,7 +419,7 @@ export default function Relatorios() {
                           <div className="text-sm">
                             <div>Vendas: {employee.salesCount}</div>
                             <div>Gastos: {employee.expensesCount}</div>
-                          </div>
+                </div>
                         </TableCell>
                         <TableCell>
                           <Button
@@ -380,8 +434,8 @@ export default function Relatorios() {
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
+            </CardContent>
+          </Card>
           </>
         )}
 
@@ -414,9 +468,9 @@ export default function Relatorios() {
                     <div className="text-sm text-gray-600">Resultado Líquido</div>
                   </div>
                 </div>
-
+                
                 {/* Vendas */}
-                <div>
+                    <div>
                   <h3 className="text-lg font-semibold mb-3">Vendas ({selectedEmployee.sales.length})</h3>
                   <Table>
                     <TableHeader>
@@ -443,9 +497,9 @@ export default function Relatorios() {
                     </TableBody>
                   </Table>
                 </div>
-
+                
                 {/* Gastos */}
-                <div>
+                    <div>
                   <h3 className="text-lg font-semibold mb-3">Gastos ({selectedEmployee.expenses.length})</h3>
                   <Table>
                     <TableHeader>

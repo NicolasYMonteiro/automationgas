@@ -32,9 +32,22 @@ interface CreditPayment {
   notes?: string
 }
 
+interface FiadoSale {
+  id: string
+  customerId: string
+  customer: string
+  product: string
+  quantity: number
+  totalPrice: number
+  fiadoCode: string
+  date: string
+  user: string
+}
+
 export default function Fiados() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [payments, setPayments] = useState<CreditPayment[]>([])
+  const [fiadoSales, setFiadoSales] = useState<FiadoSale[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
@@ -67,6 +80,7 @@ export default function Fiados() {
   useEffect(() => {
     fetchCustomers()
     fetchPayments()
+    fetchFiadoSales()
   }, [])
 
   const fetchCustomers = async () => {
@@ -110,6 +124,28 @@ export default function Fiados() {
       }
     } catch (error) {
       console.error('Error fetching payments:', error)
+    }
+  }
+
+  const fetchFiadoSales = async () => {
+    try {
+      const response = await fetch('/api/sales?status=PENDING')
+      if (response.ok) {
+        const data = await response.json()
+        setFiadoSales(data.map((sale: any) => ({
+          id: sale.id,
+          customerId: sale.customerId || '',
+          customer: sale.customer?.name || 'Consumidor Final',
+          product: sale.product?.name || '',
+          quantity: sale.quantity,
+          totalPrice: Number(sale.totalPrice),
+          fiadoCode: sale.fiadoCode,
+          date: new Date(sale.createdAt).toLocaleString('pt-BR'),
+          user: sale.user?.name || ''
+        })))
+      }
+    } catch (error) {
+      console.error('Error fetching fiado sales:', error)
     }
   }
 
@@ -197,6 +233,7 @@ export default function Fiados() {
       if (response.ok) {
         await fetchCustomers()
         await fetchPayments()
+        await fetchFiadoSales()
         setIsPaymentDialogOpen(false)
         setNewPayment({
           amount: 0,
@@ -639,6 +676,58 @@ export default function Fiados() {
                           </Button>
                         </div>
                       </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Vendas Fiadas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Vendas Fiadas Pendentes</CardTitle>
+            <CardDescription>
+              Vendas que ainda precisam ser pagas pelos clientes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse"></div>
+                ))}
+              </div>
+            ) : fiadoSales.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Nenhuma venda fiada pendente</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Vendedor</TableHead>
+                    <TableHead>Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fiadoSales.map((sale) => (
+                    <TableRow key={sale.id}>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {sale.fiadoCode}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{sale.customer}</TableCell>
+                      <TableCell>{sale.product}</TableCell>
+                      <TableCell>{sale.quantity}</TableCell>
+                      <TableCell className="text-orange-600 font-medium">{formatCurrency(sale.totalPrice)}</TableCell>
+                      <TableCell className="font-medium text-blue-600">{sale.user}</TableCell>
+                      <TableCell>{sale.date}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { customer: { name: { contains: search, mode: 'insensitive' } } },
         { product: { name: { contains: search, mode: 'insensitive' } } },
+        { fiadoCode: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
       ]
     }
 
@@ -115,6 +117,33 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
     }
 
+    // Gerar código único de 6 dígitos para vendas fiadas
+    let fiadoCode = null
+    if (paymentType === 'FIADO') {
+      let isUnique = false
+      let attempts = 0
+      
+      while (!isUnique && attempts < 10) {
+        // Gerar código de 6 dígitos
+        const code = Math.floor(100000 + Math.random() * 900000).toString()
+        
+        // Verificar se o código já existe
+        const existingSale = await prisma.sale.findUnique({
+          where: { fiadoCode: code }
+        })
+        
+        if (!existingSale) {
+          fiadoCode = code
+          isUnique = true
+        }
+        attempts++
+      }
+      
+      if (!isUnique) {
+        return NextResponse.json({ error: 'Não foi possível gerar código único para a venda fiada' }, { status: 500 })
+      }
+    }
+
     console.log('Creating sale with data:', {
       quantity,
       totalPrice,
@@ -125,6 +154,7 @@ export async function POST(request: NextRequest) {
       customerId,
       customerName,
       isCredit,
+      fiadoCode,
       status: paymentType === 'FIADO' ? 'PENDING' : 'COMPLETED',
     })
 
@@ -138,6 +168,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         productId,
         customerId,
+        fiadoCode,
         status: paymentType === 'FIADO' ? 'PENDING' : 'COMPLETED',
       },
       include: {

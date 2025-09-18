@@ -45,34 +45,6 @@ export default function Funcionarios() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    if (!loading && !canManageEmployees) {
-      router.push('/')
-    }
-  }, [canManageEmployees, loading, router])
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Carregando...</div>
-        </div>
-      </Layout>
-    )
-  }
-
-  if (!canManageEmployees) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
-            <p className="text-gray-600">Você não tem permissão para acessar esta página.</p>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false)
   const [isVehicleDialogOpen, setIsVehicleDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -103,12 +75,43 @@ export default function Funcionarios() {
     address: ''
   })
 
+  
   useEffect(() => {
     if (canManageEmployees) {
       fetchEmployees()
       fetchVehicles()
     }
   }, [canManageEmployees])
+  
+  useEffect(() => {
+    if (!loading && !canManageEmployees) {
+      router.push('/')
+    }
+  }, [canManageEmployees, loading, router])
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Carregando...</div>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (!canManageEmployees) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
+            <p className="text-gray-600">Você não tem permissão para acessar esta página.</p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
 
   const fetchEmployees = async () => {
     try {
@@ -176,11 +179,15 @@ export default function Funcionarios() {
   }
 
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const name = employee.name ?? ''     // se null/undefined → ''
+    const email = employee.email ?? ''   // idem
+  
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || email.toLowerCase().includes(searchTerm.toLowerCase())
+  
     const matchesRole = filterRole === 'all' || employee.role === filterRole
     return matchesSearch && matchesRole
   })
+  
 
   const handleCreateEmployee = async () => {
     try {
